@@ -10,6 +10,7 @@ import datetime
 import json
 import urllib
 from geo import Geo
+from profile import Profile, Image
 
 class vkparser(object):
     '''
@@ -48,24 +49,27 @@ class vkparser(object):
             if "-" in str(profile_id):
                 profile_id = str(profile_id).replace("-", "public")
             if profile_id not in self.profiles:
-                self.profiles[profile_id] = {"images" : []}
-            img = record["src"]
+                self.profiles[profile_id] = Profile(profile_id)
+            try:
+                img = record["src_xxxbig"]
+            except(KeyError):
+                img = record["src"]
             try:
                 geo_cordinates = Geo(record["lat"], record["long"])
             except(KeyError):
                 geo_cordinates = Geo(None, None)
-            insert = {"src" : img, "location" : geo_cordinates.get_location_name()}
-            self.profiles[profile_id]["images"].append(insert)
-        self.get_profiles()
+            insert = Image(img, geo_cordinates.get_location_name())
+            self.profiles[profile_id].add_image(insert)
+        self.get_profiles_names()
         
-    def get_profiles(self):
+    def get_profiles_names(self):
         usr_ids = [str(x) for x in self.profiles.keys() if type(x) is int]
         request = '/method/users.get?user_ids={ids}'.format(ids = urllib.quote(",".join(usr_ids),safe=''))
         con = httplib.HTTPSConnection('api.vk.com', 443)
         con.request('GET', request)
         resp = json.loads(con.getresponse().read())
         for i in resp["response"]:
-            self.profiles[i["uid"]]["name"] = "%s %s" % (i["first_name"], i["last_name"])
+            self.profiles[i["uid"]].set_name("%s %s" % (i["first_name"], i["last_name"]))
 
 
 if __name__ == "__main__":
@@ -75,4 +79,6 @@ if __name__ == "__main__":
     vk.set_location_by_name("Jauhajankuja 1B, Helsinki")
     vk.fetch()
     for i,j in vk.profiles.iteritems():
-        print("%s\n\t%s\n\n" % (i,str(j)))
+        print("%s - %s" % (i, j.name))
+        for k in j.images:
+            print("\t%s" % k.src)
