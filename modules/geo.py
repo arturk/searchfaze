@@ -67,6 +67,6 @@ class GeoTest(unittest.TestCase):
         assert expected == actual, "Unexistent address miscalculated. Expected: None, Actual: %s" % str(actual)
     
     def test_location_coordinates(self):
-        lat, lng = get_location_coordinates("Porkalagatan 4, Helsinki")
-        assert (lat, lng) == ("60.1646504", "24.9225171"), "Actual location coordinates: {alt}, {lng}".format(lat=lat, lng=lng)
+        actual = get_location_coordinates("Porkalagatan 4, Helsinki")
+        assert (actual["latitude"], actual["longitude"]) == ("60.1646504", "24.9225171"), "Actual location coordinates: {lat}, {lng}".format(lat=actual["latitude"], lng=actual["longitude"])
 
